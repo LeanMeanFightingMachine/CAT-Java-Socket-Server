@@ -1,16 +1,18 @@
-package uk.co.lmfm.cat.server;
+package uk.co.lmfm.cat.server.net;
 
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.Vector;
 
+import uk.co.lmfm.cat.server.SocketApplication;
+
 public class CommunicationServer extends Thread
 {
 	protected ServerSocket socketServer;
 	protected int port;
 	protected boolean listening;
-	protected Vector<CommunicationServerConnection> clientConnections;
+	public Vector<CommunicationServerConnection> clientConnections;
 
 	public CommunicationServer(int serverPort)
 	{
@@ -36,7 +38,7 @@ public class CommunicationServer extends Thread
 
 	protected void debug(String msg)
 	{
-		Main.debug("ChatServer (" + this.port + ")", msg);
+		SocketApplication.debug("ChatServer (" + this.port + ")", msg);
 	}
 
 	public void run()
@@ -55,7 +57,7 @@ public class CommunicationServer extends Thread
 				socketConnection.start();
 				this.clientConnections.add(socketConnection);
 				
-				Main.connected(socketConnection);
+				SocketApplication.connected(socketConnection);
 			}
 			;
 		}

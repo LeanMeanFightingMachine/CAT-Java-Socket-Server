@@ -5,12 +5,20 @@ import java.util.ListIterator;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import uk.co.lmfm.cat.server.net.CommunicationServer;
+import uk.co.lmfm.cat.server.net.CommunicationServerConnection;
+import uk.co.lmfm.cat.server.net.PolicyServer;
+
 import com.google.gson.Gson;
 
-public class Main
+public class SocketApplication
 {
 	public static final boolean DEBUG = true;
 	public static final int UPDATE = 100;
+	public static final int NUMBER_MAGNETS = 10;
+	public static final int WIDTH = 200;
+	public static final int HEIGHT = 200;
+	
 	public static CommunicationServer communicationServer;
 	public static PolicyServer policyServer;
 
@@ -19,7 +27,7 @@ public class Main
 
 	private Timer _timer = new Timer();
 
-	public Main()
+	public SocketApplication()
 	{
 		_timer = new Timer();
 		_timer.schedule(new BroadcastTask(), 0, UPDATE);
@@ -36,15 +44,31 @@ public class Main
 	{
 		if(_invalidate)
 		{
-			Main.communicationServer.writeToAll(jsonState());
+			for (int i = 0; i < SocketApplication.communicationServer.getClientCount(); i++)
+			{
+				CommunicationServerConnection client = SocketApplication.communicationServer.clientConnections.get(i);
+				send(client);
+			}
+			
 			_invalidate = false;
 		}
+	}
+	
+	public static void send(CommunicationServerConnection client)
+	{
+		Gson gson = new Gson();
+		String response = gson.toJson(new DataItem(new HeaderItem(client.socket.getPort()),_state));
+		
+		client.write(response);
 	}
 
 	public static void recieved(String data)
 	{
 		Gson gson = new Gson();
-		StateItem changed = gson.fromJson(data, StateItem.class);
+		Message message = gson.fromJson(data, Message.class);
+		
+		int port = message.port;
+		StateItem changed = message.data;
 
 		if (changed != null)
 		{
@@ -56,17 +80,20 @@ public class Main
 				item = itr.next();
 				if(item.id == changed.id)
 				{
-					itr.set(changed);
-					_invalidate = true;
+					if(item.locked < 0 || port == item.locked)
+					{
+						itr.set(changed);
+						_invalidate = true;
+					}
 					break;
 				}
 			}
 		}
 	}
 
-	public static void connected(CommunicationServerConnection connection)
+	public static void connected(CommunicationServerConnection client)
 	{
-		connection.write(jsonState());
+		send(client);
 	}
 
 	public static void main(String[] args)
@@ -95,29 +122,22 @@ public class Main
 			CommunicationServer communicationServer = new CommunicationServer(communicationPort);
 			communicationServer.start();
 
-			Main.communicationServer = communicationServer;
-			Main.policyServer = policyServer;
+			SocketApplication.communicationServer = communicationServer;
+			SocketApplication.policyServer = policyServer;
 
-			new Main();
+			new SocketApplication();
 		}
 		catch (Exception e)
 		{
 			debug("Main", "Exception (main)" + e.getMessage());
 		}
 	}
-	
-	private static String jsonState()
-	{
-		Gson gson = new Gson();
-		String response = gson.toJson(_state);
-		return response;
-	}
 
 	private void setState()
 	{
-		for (int i = 0; i < 10; i++)
+		for (int i = 0; i < NUMBER_MAGNETS; i++)
 		{
-			_state.add(new StateItem(i, (int) (Math.random() * 200), (int) (Math.random() * 200)));
+			_state.add(new StateItem(i, (int) (Math.random() * WIDTH), (int) (Math.random() * HEIGHT)));
 		}
 	}
 
@@ -125,7 +145,52 @@ public class Main
 	{
 		public void run()
 		{
-			Main.broadcast();
+			SocketApplication.broadcast();
+		}
+	}
+	
+	static class Message
+	{
+		public int port;
+		public StateItem data;
+		
+		public Message()
+		{
+			
+		}
+	}
+	
+	static class DataItem
+	{
+		public ArrayList<StateItem> state;
+		public HeaderItem header;
+		
+		public DataItem()
+		{
+			
+		}
+		
+		public DataItem(HeaderItem header, ArrayList<StateItem> state)
+		{
+			this.header = header;
+			this.state = state;
+		}
+	}
+	
+	static class HeaderItem
+	{
+		public int port;
+		public int w = WIDTH;
+		public int h = HEIGHT;
+		
+		public HeaderItem()
+		{
+			
+		}
+		
+		public HeaderItem(int port)
+		{
+			this.port = port;
 		}
 	}
 
@@ -134,14 +199,14 @@ public class Main
 		public int id;
 		public int x;
 		public int y;
-		public Boolean locked = false;
+		public int locked = -1;
 
 		public StateItem()
 		{
-
+			
 		}
 
-		public StateItem(int id, int x, int y, Boolean locked)
+		public StateItem(int id, int x, int y, int locked)
 		{
 			this.id = id;
 			this.x = x;

@@ -1,11 +1,13 @@
-package uk.co.lmfm.cat.server;
+package uk.co.lmfm.cat.server.net;
 
 import java.net.*;
 import java.io.*;
 
+import uk.co.lmfm.cat.server.SocketApplication;
+
 public class CommunicationServerConnection extends Thread
 {
-	protected Socket socket;
+	public Socket socket;
 	protected BufferedReader socketIn;
 	protected PrintWriter socketOut;
 	protected CommunicationServer server;
@@ -23,7 +25,7 @@ public class CommunicationServerConnection extends Thread
 
 	protected void debug(String msg)
 	{
-		Main.debug("ChatServerConnection (" + this.socket.getRemoteSocketAddress() + ")", msg);
+		SocketApplication.debug("ChatServerConnection (" + this.socket.getRemoteSocketAddress() + ")", msg);
 	}
 
 	public void run()
@@ -51,7 +53,7 @@ public class CommunicationServerConnection extends Thread
 					}
 				}
 
-				Main.recieved(line);
+				SocketApplication.recieved(line);
 
 				//this.server.writeToAll(this.getRemoteAddress() + ": " + line);
 				line = this.socketIn.readLine();

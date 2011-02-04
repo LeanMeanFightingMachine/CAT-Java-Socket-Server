@@ -1,4 +1,4 @@
-package uk.co.lmfm.cat.server;
+package uk.co.lmfm.cat.server.net;
 
 import java.util.TimerTask;
 

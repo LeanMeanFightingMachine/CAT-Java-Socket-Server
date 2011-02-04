@@ -1,7 +1,9 @@
-package uk.co.lmfm.cat.server;
+package uk.co.lmfm.cat.server.net;
 
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import uk.co.lmfm.cat.server.SocketApplication;
 
 public class PolicyServer extends Thread
 {
@@ -30,7 +32,7 @@ public class PolicyServer extends Thread
 
 	protected void debug(String msg)
 	{
-		Main.debug("PolicyServer (" + this.port + ")", msg);
+		SocketApplication.debug("PolicyServer (" + this.port + ")", msg);
 	}
 
 	public void run()

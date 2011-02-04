@@ -7,10 +7,12 @@
  * View the tutorial at http://www.broculos.net/
  */
 
-package uk.co.lmfm.cat.server;
+package uk.co.lmfm.cat.server.net;
 
 import java.io.*;
 import java.net.*;
+
+import uk.co.lmfm.cat.server.SocketApplication;
 
 /**
  * PolicyServerConnection reads policy requests from a client's socket and writes the server policy.
@@ -37,7 +39,7 @@ public class PolicyServerConnection extends Thread {
      * @param msg the debug message to be sent to the main application
      */
     protected void debug(String msg) {
-        Main.debug("PolicyServerConnection (" + this.socket.getRemoteSocketAddress() + ")", msg);
+        SocketApplication.debug("PolicyServerConnection (" + this.socket.getRemoteSocketAddress() + ")", msg);
     }
 
     /**
